@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import './DebugPanel.css'
 
-function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted, onExportData, onImportData, onClearAllData }) {
+function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted, onExportData, onImportData, onClearAllData, onCopyTasks }) {
   const [isOpen, setIsOpen] = useState(false)
   const [pendingFakeTime, setPendingFakeTime] = useState(debugMode.fakeTime)
   const fileInputRef = useRef(null)
@@ -148,6 +148,13 @@ function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted, onExpo
                 onChange={onImportData}
                 style={{ display: 'none' }}
               />
+              <button 
+                className="debug-copy-btn"
+                onClick={onCopyTasks}
+                title="Copy task names to clipboard (no completion status)"
+              >
+                📋 Copy Tasks
+              </button>
             </div>
             <button 
               className="debug-clear-all-btn"

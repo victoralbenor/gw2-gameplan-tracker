@@ -255,6 +255,32 @@ function App() {
     event.target.value = ''
   }
 
+  const copyTasksToClipboard = async () => {
+    let text = ''
+    
+    // Order: weeklies, dailies, gaming, working goals
+    const orderedKeys = ['coffeeWeeklies', 'coffeeDailies', 'gamingDailies', 'workingGoals']
+    
+    orderedKeys.forEach((key, index) => {
+      const category = categories[key]
+      if (category.tasks.length > 0) {
+        if (index > 0) text += '\n'
+        text += category.title + '\n'
+        category.tasks.forEach(task => {
+          text += '- ' + task.text + '\n'
+        })
+      }
+    })
+    
+    try {
+      await navigator.clipboard.writeText(text)
+      alert('Tasks copied to clipboard!')
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      alert('Failed to copy to clipboard')
+    }
+  }
+
   const clearAllData = () => {
     console.log('clearAllData called')
     console.log('Clearing localStorage...')
@@ -336,6 +362,7 @@ function App() {
         onExportData={exportData}
         onImportData={importData}
         onClearAllData={clearAllData}
+        onCopyTasks={copyTasksToClipboard}
       />
     </div>
   )
