@@ -1,0 +1,333 @@
+.task-category {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-category:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+}
+
+.category-header {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 16px;
+}
+
+.category-header h2 {
+  color: #1e3c72;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.category-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.progress-bar-container {
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #45a049);
+  transition: width 0.3s ease;
+}
+
+.task-count {
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.tasks-list {
+  flex: 1;
+  margin-bottom: 16px;
+  min-height: 60px;
+}
+
+.empty-message {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  cursor: grab;
+}
+
+.task-item:active {
+  cursor: grabbing;
+}
+
+.task-item:hover {
+  background: #e9ecef;
+}
+
+.task-item.completed {
+  opacity: 0.6;
+}
+
+.task-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.task-item.drag-over {
+  border-top: 3px solid #2a5298;
+  margin-top: 8px;
+}
+
+.drag-handle {
+  color: #999;
+  font-size: 1.2rem;
+  margin-right: 8px;
+  cursor: grab;
+  user-select: none;
+  line-height: 1;
+}
+
+.task-item:active .drag-handle {
+  cursor: grabbing;
+}
+
+.task-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex: 1;
+  position: relative;
+}
+
+.task-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #2a5298;
+  border-radius: 4px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.task-checkbox input[type="checkbox"]:checked ~ .checkmark {
+  background: #2a5298;
+}
+
+.task-checkbox input[type="checkbox"]:checked ~ .checkmark::after {
+  content: '✓';
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.task-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+}
+
+.task-text {
+  color: #333;
+}
+
+.last-completed {
+  font-size: 0.75rem;
+  color: #999;
+  font-style: italic;
+}
+
+.task-item.completed .task-text {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.task-item:hover .task-actions {
+  opacity: 1;
+}
+
+.edit-btn,
+.delete-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.delete-btn:hover {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.task-item.editing {
+  background: #fff;
+  border: 2px solid #2a5298;
+  cursor: default;
+}
+
+.edit-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+  margin-right: 8px;
+}
+
+.edit-input:focus {
+  border-color: #2a5298;
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.save-edit-btn,
+.cancel-edit-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.save-edit-btn {
+  color: #4CAF50;
+}
+
+.save-edit-btn:hover {
+  background: #e8f5e9;
+}
+
+.cancel-edit-btn {
+  color: #f44336;
+}
+
+.cancel-edit-btn:hover {
+  background: #ffebee;
+}
+
+.add-task-section {
+  margin-top: auto;
+}
+
+.add-task-btn {
+  width: 100%;
+  padding: 12px;
+  background: #2a5298;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.add-task-btn:hover {
+  background: #1e3c72;
+}
+
+.add-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #2a5298;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.task-input:focus {
+  border-color: #1e3c72;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.submit-btn,
+.cancel-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.submit-btn:hover {
+  background: #45a049;
+}
+
+.cancel-btn {
+  background: #e0e0e0;
+  color: #666;
+}
+
+.cancel-btn:hover {
+  background: #d0d0d0;
+}
