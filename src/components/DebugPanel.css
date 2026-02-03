@@ -181,7 +181,8 @@
 }
 
 .debug-export-btn,
-.debug-import-btn {
+.debug-import-btn,
+.debug-copy-btn {
   flex: 1;
   padding: 10px;
   border: none;
@@ -208,6 +209,15 @@
 
 .debug-import-btn:hover {
   background: #1976D2;
+}
+
+.debug-copy-btn {
+  background: #9C27B0;
+  color: white;
+}
+
+.debug-copy-btn:hover {
+  background: #7B1FA2;
 }
 
 .debug-clear-all-btn {
