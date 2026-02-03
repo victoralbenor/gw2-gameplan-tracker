@@ -361,3 +361,47 @@
 .cancel-btn:hover {
   background: #d0d0d0;
 }
+
+/* Completed tasks section */
+.completed-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.completed-section-toggle {
+  width: 100%;
+  padding: 10px 12px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+}
+
+.completed-section-toggle:hover {
+  background: #e0e0e0;
+}
+
+.toggle-icon {
+  font-size: 0.8rem;
+  width: 16px;
+  display: inline-block;
+  text-align: center;
+}
+
+.completed-section .task-item {
+  cursor: default;
+}
+
+.completed-section .drag-handle {
+  cursor: default;
+}
+

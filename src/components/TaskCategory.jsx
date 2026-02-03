@@ -1,100 +1,7 @@
 import { useState, useEffect } from 'react'
 import './TaskCategory.css'
 import HabitTracker from './HabitTracker'
-
-function getTimeUntilReset(resetType, debugMode = null) {
-  if (resetType === 'none') return null
-
-  let now
-  if (debugMode && debugMode.useFakeTime) {
-    now = new Date(debugMode.fakeTime)
-  } else {
-    now = new Date()
-  }
-
-  // Convert to UTC-3
-  const UTC_MINUS_3_OFFSET = -3 * 60
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
-  const utcMinus3 = new Date(utc + (UTC_MINUS_3_OFFSET * 60000))
-
-  let nextReset
-  
-  if (resetType === 'daily') {
-    // Next daily reset at 21:00
-    nextReset = new Date(utcMinus3)
-    nextReset.setHours(21, 0, 0, 0)
-    
-    // If we've passed today's reset, move to tomorrow
-    if (utcMinus3 >= nextReset) {
-      nextReset.setDate(nextReset.getDate() + 1)
-    }
-  } else if (resetType === 'weekly') {
-    // Next weekly reset Monday at 04:30
-    nextReset = new Date(utcMinus3)
-    const dayOfWeek = nextReset.getDay() // 0 = Sunday, 1 = Monday
-    const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7
-    
-    nextReset.setDate(nextReset.getDate() + daysUntilMonday)
-    nextReset.setHours(4, 30, 0, 0)
-    
-    // If it's Monday but we've passed the reset time
-    if (dayOfWeek === 1 && utcMinus3.getHours() >= 4 && utcMinus3.getMinutes() >= 30) {
-      nextReset.setDate(nextReset.getDate() + 7)
-    }
-    // If it's Monday and before reset time
-    if (dayOfWeek === 1 && (utcMinus3.getHours() < 4 || (utcMinus3.getHours() === 4 && utcMinus3.getMinutes() < 30))) {
-      nextReset.setDate(nextReset.getDate() - daysUntilMonday)
-    }
-  }
-
-  const diffMs = nextReset - utcMinus3
-  const days = Math.floor(diffMs / 86400000)
-  const hours = Math.floor((diffMs % 86400000) / 3600000)
-  const minutes = Math.floor((diffMs % 3600000) / 60000)
-
-  if (days > 0) return `${days}d ${hours}h ${minutes}m`
-  if (hours > 0) return `${hours}h ${minutes}m`
-  return `${minutes}m`
-}
-
-function formatTimestamp(isoString, debugMode = null) {
-  const date = new Date(isoString)
-  let now
-  
-  if (debugMode && debugMode.useFakeTime) {
-    now = new Date(debugMode.fakeTime)
-  } else {
-    now = new Date()
-  }
-  
-  const diffMs = now - date
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-
-  // Get formatted date parts
-  const dayName = date.toLocaleDateString('en-US', { weekday: 'long' })
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = date.toLocaleDateString('en-US', { month: 'short' })
-  const year = date.getFullYear()
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  
-  const fullTimestamp = `${dayName} ${day}/${month}/${year} at ${hours}:${minutes}`
-
-  let relativeTime
-  if (diffMins < 1) relativeTime = 'Just now'
-  else if (diffMins < 60) relativeTime = `${diffMins}m ago`
-  else if (diffHours < 24) relativeTime = `${diffHours}h ago`
-  else if (diffDays < 7) relativeTime = `${diffDays}d ago`
-  else relativeTime = null
-  
-  if (relativeTime) {
-    return `${relativeTime}, ${fullTimestamp}`
-  }
-  
-  return fullTimestamp
-}
+import { getTimeUntilReset, formatTimestamp } from '../utils/dateHelpers'
 
 function TaskCategory({ category, debugMode, onAddTask, onToggleTask, onDeleteTask, onEditTask, onReorderTasks }) {
   const [newTaskText, setNewTaskText] = useState('')
@@ -104,6 +11,7 @@ function TaskCategory({ category, debugMode, onAddTask, onToggleTask, onDeleteTa
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editingText, setEditingText] = useState('')
   const [expandedTaskId, setExpandedTaskId] = useState(null)
+  const [showCompleted, setShowCompleted] = useState(true)
   const [timeUntilReset, setTimeUntilReset] = useState(() => 
     getTimeUntilReset(category.resetType, debugMode)
   )
@@ -131,6 +39,14 @@ function TaskCategory({ category, debugMode, onAddTask, onToggleTask, onDeleteTa
   const completedCount = category.tasks.filter(t => t.completed).length
   const totalCount = category.tasks.length
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
+  
+  // For 'none' reset type, separate active and completed tasks
+  const activeTasks = category.resetType === 'none' 
+    ? category.tasks.filter(t => !t.completed)
+    : category.tasks
+  const completedTasks = category.resetType === 'none'
+    ? category.tasks.filter(t => t.completed)
+    : []
 
   const handleDragStart = (e, index) => {
     setDraggedIndex(index)
@@ -206,7 +122,8 @@ function TaskCategory({ category, debugMode, onAddTask, onToggleTask, onDeleteTa
           <p className="empty-message">No tasks yet. Add one to get started!</p>
         )}
         
-        {category.tasks.map((task, index) => (
+        {/* Active tasks (or all tasks for resetTypes other than 'none') */}
+        {activeTasks.map((task, index) => (
           <div
             key={task.id}
             className={`task-item ${task.completed ? 'completed' : ''} ${
@@ -214,12 +131,12 @@ function TaskCategory({ category, debugMode, onAddTask, onToggleTask, onDeleteTa
             } ${dragOverIndex === index ? 'drag-over' : ''} ${
               editingTaskId === task.id ? 'editing' : ''
             }`}
-            draggable={editingTaskId !== task.id}
-            onDragStart={(e) => handleDragStart(e, index)}
-            onDragOver={(e) => handleDragOver(e, index)}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, index)}
-            onDragEnd={handleDragEnd}
+            draggable={editingTaskId !== task.id && category.resetType !== 'none'}
+            onDragStart={(e) => category.resetType !== 'none' && handleDragStart(e, index)}
+            onDragOver={(e) => category.resetType !== 'none' && handleDragOver(e, index)}
+            onDragLeave={category.resetType !== 'none' ? handleDragLeave : undefined}
+            onDrop={(e) => category.resetType !== 'none' && handleDrop(e, index)}
+            onDragEnd={category.resetType !== 'none' ? handleDragEnd : undefined}
           >
             {editingTaskId === task.id ? (
               <>
@@ -298,6 +215,55 @@ function TaskCategory({ category, debugMode, onAddTask, onToggleTask, onDeleteTa
             )}
           </div>
         ))}
+        
+        {/* Completed tasks section (only for 'none' reset type) */}
+        {category.resetType === 'none' && completedTasks.length > 0 && (
+          <div className="completed-section">
+            <button 
+              className="completed-section-toggle"
+              onClick={() => setShowCompleted(!showCompleted)}
+            >
+              <span className="toggle-icon">{showCompleted ? '▼' : '▶'}</span>
+              Completed ({completedTasks.length})
+            </button>
+            
+            {showCompleted && completedTasks.map((task, index) => (
+              <div
+                key={task.id}
+                className="task-item completed"
+              >
+                <span className="drag-handle" style={{ opacity: 0.3 }}>⋮⋮</span>
+                <div className="task-main-content">
+                  <label className="task-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={() => onToggleTask(task.id)}
+                    />
+                    <span className="checkmark"></span>
+                    <div className="task-content">
+                      <span className="task-text">{task.text}</span>
+                      {task.lastCompleted && (
+                        <span className="last-completed">
+                          Last done: {formatTimestamp(task.lastCompleted, debugMode)}
+                        </span>
+                      )}
+                    </div>
+                  </label>
+                </div>
+                <div className="task-actions">
+                  <button
+                    className="delete-btn"
+                    onClick={() => onDeleteTask(task.id)}
+                    aria-label="Delete task"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="add-task-section">

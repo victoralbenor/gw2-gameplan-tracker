@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import TaskCategory from './components/TaskCategory'
 import DebugPanel from './components/DebugPanel'
-import { checkAndResetTasks, getGameDay, getGameWeekDays } from './utils/resetLogic'
+import { checkAndResetTasks } from './utils/resetLogic'
+import { toggleCompletion } from './utils/completionHistory'
 
 const getInitialCategories = () => {
   const saved = localStorage.getItem('gw2-gameplan-data')
@@ -127,35 +128,12 @@ function App() {
             const completionHistory = task.completionHistory || []
             const resetType = prev[categoryKey].resetType
             
-            let updatedHistory
-            
-            if (resetType === 'weekly') {
-              // For weekly tasks, add/remove entire week
-              const weekDays = getGameWeekDays(currentTime)
-              
-              if (isCompletingNow) {
-                // Add all days of the current week
-                const uniqueDays = new Set([...completionHistory, ...weekDays])
-                updatedHistory = Array.from(uniqueDays)
-              } else {
-                // Remove all days of the current week
-                const weekDaysSet = new Set(weekDays)
-                updatedHistory = completionHistory.filter(day => !weekDaysSet.has(day))
-              }
-            } else {
-              // For daily tasks, add/remove single game day
-              const gameDay = getGameDay(currentTime)
-              
-              if (isCompletingNow) {
-                updatedHistory = [...completionHistory, gameDay]
-              } else {
-                const currentGameDay = getGameDay(currentTime)
-                updatedHistory = completionHistory.filter(date => {
-                  const completionGameDay = getGameDay(date)
-                  return completionGameDay !== currentGameDay
-                })
-              }
-            }
+            const updatedHistory = toggleCompletion(
+              completionHistory,
+              currentTime,
+              resetType,
+              isCompletingNow
+            )
             
             return {
               ...task,

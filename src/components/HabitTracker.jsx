@@ -1,5 +1,6 @@
 import './HabitTracker.css'
 import { getGameDay } from '../utils/resetLogic'
+import { calculateDailyStreak, calculateWeeklyStreak } from '../utils/streakCalculator'
 
 function HabitTracker({ task, resetType, debugMode, isExpanded, onToggleExpand }) {
   if (resetType === 'none') return null
@@ -56,56 +57,6 @@ function HabitTracker({ task, resetType, debugMode, isExpanded, onToggleExpand }
   const isFuture = (date) => {
     return date > currentDate
   }
-
-  // Calculate current streak
-  const calculateStreak = () => {
-    if (completionHistory.length === 0) return 0
-    
-    if (resetType === 'weekly') {
-      // For weekly tasks, count consecutive weeks
-      const weeks = getWeeksForDisplay()
-      let streak = 0
-      
-      for (let i = weeks.length - 1; i >= 0; i--) {
-        if (weeks[i].completed) {
-          streak++
-        } else {
-          break
-        }
-      }
-      
-      return streak
-    }
-    
-    let streak = 0
-    
-    // Get the current game day (what day it counts as based on reset time)
-    const currentGameDay = getGameDay(currentDate.toISOString())
-    const today = new Date(currentGameDay)
-    
-    // Check if current game day is completed
-    const todayCompleted = isDateCompleted(today)
-    
-    // Start from yesterday if today isn't completed, otherwise from today
-    let checkDate = new Date(today)
-    if (!todayCompleted) {
-      checkDate.setDate(checkDate.getDate() - 1)
-    }
-    
-    // Count backwards for daily tasks
-    if (resetType === 'daily') {
-      while (checkDate >= new Date(task.createdAt)) {
-        if (isDateCompleted(checkDate)) {
-          streak++
-          checkDate.setDate(checkDate.getDate() - 1)
-        } else {
-          break
-        }
-      }
-    }
-    
-    return streak
-  }
   
   const getWeeksForDisplay = () => {
     const weeks = []
@@ -159,7 +110,11 @@ function HabitTracker({ task, resetType, debugMode, isExpanded, onToggleExpand }
 
   const last7Days = getLast7Days()
   const monthDays = getCurrentMonthDays()
-  const currentStreak = calculateStreak()
+  
+  // Calculate streak using utility functions
+  const currentStreak = resetType === 'weekly'
+    ? calculateWeeklyStreak(completionHistory, getWeeksForDisplay)
+    : calculateDailyStreak(completionHistory, currentDate, task.createdAt)
   
   const streakUnit = resetType === 'weekly' ? (currentStreak === 1 ? 'week' : 'weeks') : (currentStreak === 1 ? 'day' : 'days')
 
