@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import './DebugPanel.css'
 
-function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted }) {
+function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted, onExportData, onImportData, onClearAllData }) {
   const [isOpen, setIsOpen] = useState(false)
   const [pendingFakeTime, setPendingFakeTime] = useState(debugMode.fakeTime)
+  const fileInputRef = useRef(null)
 
   const formatDateTimeLocal = (date) => {
     const d = new Date(date)
@@ -119,7 +120,44 @@ function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted }) {
               className="debug-clear-btn"
               onClick={onClearLastCompleted}
             >
-              Clear All "Last Done" Timestamps
+              Clear Tasks Progress
+            </button>
+          </div>
+
+          <div className="debug-section">
+            <h4 className="debug-section-title">Data Management</h4>
+            <div className="data-management-buttons">
+              <button 
+                className="debug-export-btn"
+                onClick={onExportData}
+                title="Download all your data as JSON"
+              >
+                📥 Export Data
+              </button>
+              <button 
+                className="debug-import-btn"
+                onClick={() => fileInputRef.current?.click()}
+                title="Load data from a backup file"
+              >
+                📤 Import Data
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={onImportData}
+                style={{ display: 'none' }}
+              />
+            </div>
+            <button 
+              className="debug-clear-all-btn"
+              onClick={() => {
+                console.log('Clear all button clicked!')
+                onClearAllData()
+              }}
+              title="Delete all tasks and reset to initial state"
+            >
+              🗑️ Clear All Data
             </button>
           </div>
         </div>

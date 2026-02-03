@@ -206,6 +206,107 @@ function App() {
     })
   }
 
+  const exportData = () => {
+    const dataToExport = {
+      categories,
+      debugMode,
+      exportDate: new Date().toISOString(),
+      version: '0.5.0'
+    }
+    
+    const dataStr = JSON.stringify(dataToExport, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `gw2-gameplan-backup-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const importData = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result)
+        
+        if (imported.categories) {
+          setCategories(imported.categories)
+        }
+        if (imported.debugMode) {
+          setDebugMode(imported.debugMode)
+        }
+        
+        alert('Data imported successfully!')
+      } catch (error) {
+        console.error('Failed to import data:', error)
+        alert('Failed to import data. Please check the file format.')
+      }
+    }
+    reader.readAsText(file)
+    
+    // Reset the input so the same file can be imported again
+    event.target.value = ''
+  }
+
+  const clearAllData = () => {
+    console.log('clearAllData called')
+    console.log('Clearing localStorage...')
+    
+    // Clear localStorage first
+    localStorage.removeItem('gw2-gameplan-data')
+    localStorage.removeItem('gw2-debug-mode')
+    
+    // Reset to initial categories (fresh, not from localStorage)
+    const freshCategories = {
+      coffeeWeeklies: {
+        title: '📅 Quick Weeklies',
+        description: 'Resets Mondays at 04:30 UTC-3',
+        resetType: 'weekly',
+        tasks: [],
+        lastResetTime: null
+      },
+      coffeeDailies: {
+        title: '⚡ Quick Dailies',
+        description: 'Resets daily at 21:00 UTC-3',
+        resetType: 'daily',
+        tasks: [],
+        lastResetTime: null
+      },
+      gamingDailies: {
+        title: '🎮 Gaming Dailies',
+        description: 'Resets daily at 21:00 UTC-3',
+        resetType: 'daily',
+        tasks: [],
+        lastResetTime: null
+      },
+      workingGoals: {
+        title: '🎯 Working Goals',
+        description: 'No reset - permanent progress',
+        resetType: 'none',
+        tasks: [],
+        lastResetTime: null
+      }
+    }
+    
+    console.log('Setting fresh categories:', freshCategories)
+    setCategories(freshCategories)
+    
+    // Reset debug mode
+    setDebugMode({
+      useFakeTime: false,
+      fakeTime: new Date().toISOString()
+    })
+    
+    console.log('All data cleared!')
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -232,6 +333,9 @@ function App() {
         debugMode={debugMode}
         onDebugModeChange={setDebugMode}
         onClearLastCompleted={clearAllLastCompleted}
+        onExportData={exportData}
+        onImportData={importData}
+        onClearAllData={clearAllData}
       />
     </div>
   )
