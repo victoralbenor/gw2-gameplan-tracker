@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import TaskCategory from './components/TaskCategory'
+import DebugPanel from './components/DebugPanel'
 import { checkAndResetTasks } from './utils/resetLogic'
 
 const getInitialCategories = () => {
@@ -8,7 +9,8 @@ const getInitialCategories = () => {
   if (saved) {
     try {
       const parsedData = JSON.parse(saved)
-      return checkAndResetTasks(parsedData)
+      // Don't auto-reset on load, let the effect handle it
+      return parsedData
     } catch (e) {
       console.error('Failed to load saved data:', e)
     }
@@ -48,6 +50,27 @@ const getInitialCategories = () => {
 
 function App() {
   const [categories, setCategories] = useState(getInitialCategories)
+  const [debugMode, setDebugMode] = useState(() => {
+    const saved = localStorage.getItem('gw2-debug-mode')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch (e) {
+        console.error('Failed to load debug mode:', e)
+      }
+    }
+    return {
+      useFakeTime: false,
+      fakeTime: new Date().toISOString()
+    }
+  })
+
+  // Save debug mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('gw2-debug-mode', JSON.stringify(debugMode))
+    // Trigger reset check when debug mode changes
+    setCategories(prevCategories => checkAndResetTasks(prevCategories, debugMode))
+  }, [debugMode])
 
   // Save to localStorage whenever categories change
   useEffect(() => {
@@ -57,14 +80,18 @@ function App() {
   // Check for resets every minute
   useEffect(() => {
     const interval = setInterval(() => {
-      setCategories(prevCategories => checkAndResetTasks(prevCategories))
+      setCategories(prevCategories => checkAndResetTasks(prevCategories, debugMode))
     }, 60000) // Check every minute
 
     return () => clearInterval(interval)
-  }, [])
+  }, [debugMode])
 
   const addTask = (categoryKey, taskText) => {
     if (!taskText.trim()) return
+
+    const currentTime = debugMode.useFakeTime 
+      ? debugMode.fakeTime 
+      : new Date().toISOString()
 
     setCategories(prev => ({
       ...prev,
@@ -76,7 +103,7 @@ function App() {
             id: Date.now(),
             text: taskText,
             completed: false,
-            createdAt: new Date().toISOString(),
+            createdAt: currentTime,
             lastCompleted: null
           }
         ]
@@ -85,6 +112,10 @@ function App() {
   }
 
   const toggleTask = (categoryKey, taskId) => {
+    const currentTime = debugMode.useFakeTime 
+      ? debugMode.fakeTime 
+      : new Date().toISOString()
+    
     setCategories(prev => ({
       ...prev,
       [categoryKey]: {
@@ -93,7 +124,7 @@ function App() {
           task.id === taskId ? { 
             ...task, 
             completed: !task.completed,
-            lastCompleted: !task.completed ? new Date().toISOString() : task.lastCompleted
+            lastCompleted: !task.completed ? currentTime : task.lastCompleted
           } : task
         )
       }
@@ -140,6 +171,22 @@ function App() {
     }))
   }
 
+  const clearAllLastCompleted = () => {
+    setCategories(prev => {
+      const updated = {}
+      for (const [key, category] of Object.entries(prev)) {
+        updated[key] = {
+          ...category,
+          tasks: category.tasks.map(task => ({
+            ...task,
+            lastCompleted: null
+          }))
+        }
+      }
+      return updated
+    })
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -152,6 +199,7 @@ function App() {
           <TaskCategory
             key={key}
             category={category}
+            debugMode={debugMode}
             onAddTask={(text) => addTask(key, text)}
             onToggleTask={(taskId) => toggleTask(key, taskId)}
             onDeleteTask={(taskId) => deleteTask(key, taskId)}
@@ -160,6 +208,12 @@ function App() {
           />
         ))}
       </div>
+
+      <DebugPanel 
+        debugMode={debugMode}
+        onDebugModeChange={setDebugMode}
+        onClearLastCompleted={clearAllLastCompleted}
+      />
     </div>
   )
 }

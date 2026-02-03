@@ -2,19 +2,26 @@
 const UTC_MINUS_3_OFFSET = -3 * 60 // -180 minutes
 
 // Get current time in UTC-3
-function getCurrentTimeUTCMinus3() {
-  const now = new Date()
+function getCurrentTimeUTCMinus3(debugMode = null) {
+  let now
+  
+  if (debugMode && debugMode.useFakeTime) {
+    now = new Date(debugMode.fakeTime)
+  } else {
+    now = new Date()
+  }
+  
   const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
   const utcMinus3 = new Date(utc + (UTC_MINUS_3_OFFSET * 60000))
   return utcMinus3
 }
 
 // Check if daily reset has occurred (21:00 UTC-3)
-function shouldResetDaily(lastResetTime) {
+function shouldResetDaily(lastResetTime, debugMode = null) {
   if (!lastResetTime) return true
 
   const lastReset = new Date(lastResetTime)
-  const now = getCurrentTimeUTCMinus3()
+  const now = getCurrentTimeUTCMinus3(debugMode)
   
   // Today's reset time at 21:00 UTC-3
   const todayReset = new Date(now)
@@ -38,11 +45,11 @@ function shouldResetDaily(lastResetTime) {
 }
 
 // Check if weekly reset has occurred (Monday at 04:30 UTC-3)
-function shouldResetWeekly(lastResetTime) {
+function shouldResetWeekly(lastResetTime, debugMode = null) {
   if (!lastResetTime) return true
 
   const lastReset = new Date(lastResetTime)
-  const now = getCurrentTimeUTCMinus3()
+  const now = getCurrentTimeUTCMinus3(debugMode)
   
   // Find the most recent Monday at 04:30 UTC-3
   const currentWeekReset = new Date(now)
@@ -62,15 +69,15 @@ function shouldResetWeekly(lastResetTime) {
 }
 
 // Reset tasks for a category if needed
-function resetCategoryTasks(category) {
+function resetCategoryTasks(category, debugMode = null) {
   const { resetType, lastResetTime, tasks } = category
   
   let shouldReset = false
   
   if (resetType === 'daily') {
-    shouldReset = shouldResetDaily(lastResetTime)
+    shouldReset = shouldResetDaily(lastResetTime, debugMode)
   } else if (resetType === 'weekly') {
-    shouldReset = shouldResetWeekly(lastResetTime)
+    shouldReset = shouldResetWeekly(lastResetTime, debugMode)
   }
   
   if (shouldReset) {
@@ -85,11 +92,11 @@ function resetCategoryTasks(category) {
 }
 
 // Check and reset all categories
-export function checkAndResetTasks(categories) {
+export function checkAndResetTasks(categories, debugMode = null) {
   const resetCategories = {}
   
   for (const [key, category] of Object.entries(categories)) {
-    resetCategories[key] = resetCategoryTasks(category)
+    resetCategories[key] = resetCategoryTasks(category, debugMode)
   }
   
   return resetCategories
