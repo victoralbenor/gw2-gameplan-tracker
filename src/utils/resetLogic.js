@@ -1,6 +1,61 @@
 // Timezone offset for UTC-3
 const UTC_MINUS_3_OFFSET = -3 * 60 // -180 minutes
 
+// Convert a timestamp to the "game day" (day it counts for, considering 21:00 reset)
+export function getGameDay(timestamp) {
+  const date = new Date(timestamp)
+  const utc = date.getTime() + (date.getTimezoneOffset() * 60000)
+  const utcMinus3 = new Date(utc + (UTC_MINUS_3_OFFSET * 60000))
+  
+  // If it's 21:00 or later, it counts for the next day
+  if (utcMinus3.getHours() >= 21) {
+    utcMinus3.setDate(utcMinus3.getDate() + 1)
+  }
+  
+  // Set to midnight to just get the date
+  utcMinus3.setHours(0, 0, 0, 0)
+  return utcMinus3.toISOString()
+}
+
+// Get all days in the current game week (Monday 04:30 to Monday 04:30)
+export function getGameWeekDays(timestamp) {
+  const date = new Date(timestamp)
+  const utc = date.getTime() + (date.getTimezoneOffset() * 60000)
+  const utcMinus3 = new Date(utc + (UTC_MINUS_3_OFFSET * 60000))
+  
+  // Find the Monday 04:30 that started this week
+  const dayOfWeek = utcMinus3.getDay() // 0 = Sunday, 1 = Monday
+  const hourOfDay = utcMinus3.getHours()
+  const minuteOfDay = utcMinus3.getMinutes()
+  
+  // Calculate days since last Monday 04:30
+  let daysSinceWeekStart
+  if (dayOfWeek === 1 && (hourOfDay < 4 || (hourOfDay === 4 && minuteOfDay < 30))) {
+    // It's Monday before 04:30, so week started last Monday
+    daysSinceWeekStart = 7
+  } else if (dayOfWeek === 0) {
+    // Sunday, week started 6 days ago
+    daysSinceWeekStart = 6
+  } else {
+    // Other days
+    daysSinceWeekStart = dayOfWeek - 1
+  }
+  
+  const weekStart = new Date(utcMinus3)
+  weekStart.setDate(weekStart.getDate() - daysSinceWeekStart)
+  weekStart.setHours(0, 0, 0, 0)
+  
+  // Get all 7 days of the week
+  const days = []
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(weekStart)
+    day.setDate(day.getDate() + i)
+    days.push(day.toISOString())
+  }
+  
+  return days
+}
+
 // Get current time in UTC-3
 function getCurrentTimeUTCMinus3(debugMode = null) {
   let now
@@ -81,9 +136,30 @@ function resetCategoryTasks(category, debugMode = null) {
   }
   
   if (shouldReset) {
+    // When resetting, we need to check each task's completion history
+    // Only uncheck if the task was NOT completed for the current game day
+    let currentTime
+    if (debugMode && debugMode.useFakeTime) {
+      currentTime = debugMode.fakeTime
+    } else {
+      currentTime = new Date().toISOString()
+    }
+    
+    const currentGameDay = getGameDay(currentTime)
+    
     return {
       ...category,
-      tasks: tasks.map(task => ({ ...task, completed: false })),
+      tasks: tasks.map(task => {
+        const completionHistory = task.completionHistory || []
+        // Check if current game day is in the completion history
+        const completedToday = completionHistory.some(gameDay => gameDay === currentGameDay)
+        
+        return {
+          ...task,
+          completed: completedToday, // Keep checked if completed for current game day
+          completionHistory
+        }
+      }),
       lastResetTime: new Date().toISOString()
     }
   }

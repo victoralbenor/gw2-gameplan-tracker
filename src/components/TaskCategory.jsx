@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './TaskCategory.css'
+import HabitTracker from './HabitTracker'
 
 function getTimeUntilReset(resetType, debugMode = null) {
   if (resetType === 'none') return null
@@ -102,6 +103,7 @@ function TaskCategory({ category, debugMode, onAddTask, onToggleTask, onDeleteTa
   const [dragOverIndex, setDragOverIndex] = useState(null)
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editingText, setEditingText] = useState('')
+  const [expandedTaskId, setExpandedTaskId] = useState(null)
   const [timeUntilReset, setTimeUntilReset] = useState(() => 
     getTimeUntilReset(category.resetType, debugMode)
   )
@@ -249,23 +251,34 @@ function TaskCategory({ category, debugMode, onAddTask, onToggleTask, onDeleteTa
             ) : (
               <>
                 <span className="drag-handle">⋮⋮</span>
-                <label className="task-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={task.completed}
-                    onChange={() => onToggleTask(task.id)}
-                  />
-                  <span className="checkmark"></span>
-                  <div className="task-content">
-                    <span className="task-text">{task.text}</span>
-                    {task.lastCompleted && (
-                      <span className="last-completed">
-                        Last done: {formatTimestamp(task.lastCompleted, debugMode)}
-                      </span>
-                    )}
-                  </div>
-                </label>
+                <div className="task-main-content">
+                  <label className="task-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={() => onToggleTask(task.id)}
+                    />
+                    <span className="checkmark"></span>
+                    <div className="task-content">
+                      <span className="task-text">{task.text}</span>
+                      {task.lastCompleted && (
+                        <span className="last-completed">
+                          Last done: {formatTimestamp(task.lastCompleted, debugMode)}
+                        </span>
+                      )}
+                    </div>
+                  </label>
+                </div>
                 <div className="task-actions">
+                  {category.resetType !== 'none' && (
+                    <HabitTracker 
+                      task={task} 
+                      resetType={category.resetType}
+                      debugMode={debugMode}
+                      isExpanded={expandedTaskId === task.id}
+                      onToggleExpand={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                    />
+                  )}
                   <button
                     className="edit-btn"
                     onClick={() => startEditing(task)}

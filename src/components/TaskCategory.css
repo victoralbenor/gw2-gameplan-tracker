@@ -6,11 +6,17 @@
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .task-category:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+}
+
+.task-category:has(.habit-expanded) {
+  z-index: 300;
 }
 
 .category-header {
@@ -84,7 +90,7 @@
 
 .task-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   padding: 12px;
   margin-bottom: 8px;
@@ -102,7 +108,8 @@
   background: #e9ecef;
 }
 
-.task-item.completed {
+.task-item.completed .drag-handle,
+.task-item.completed .task-main-content {
   opacity: 0.6;
 }
 
@@ -123,10 +130,18 @@
   cursor: grab;
   user-select: none;
   line-height: 1;
+  padding-top: 4px;
 }
 
 .task-item:active .drag-handle {
   cursor: grabbing;
+}
+
+.task-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .task-checkbox {
@@ -192,12 +207,9 @@
 .task-actions {
   display: flex;
   gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.task-item:hover .task-actions {
   opacity: 1;
+  padding-top: 4px;
+  position: relative;
 }
 
 .edit-btn,

@@ -3,6 +3,7 @@ import './DebugPanel.css'
 
 function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [pendingFakeTime, setPendingFakeTime] = useState(debugMode.fakeTime)
 
   const formatDateTimeLocal = (date) => {
     const d = new Date(date)
@@ -15,16 +16,24 @@ function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted }) {
   }
 
   const handleTimeChange = (e) => {
-    onDebugModeChange({
-      ...debugMode,
-      fakeTime: new Date(e.target.value).toISOString()
-    })
+    setPendingFakeTime(new Date(e.target.value).toISOString())
   }
 
   const handleToggle = (e) => {
     onDebugModeChange({
       ...debugMode,
       useFakeTime: e.target.checked
+    })
+  }
+
+  const resetToCurrentTime = () => {
+    setPendingFakeTime(new Date().toISOString())
+  }
+
+  const applyFakeTime = () => {
+    onDebugModeChange({
+      ...debugMode,
+      fakeTime: pendingFakeTime
     })
   }
 
@@ -57,19 +66,35 @@ function DebugPanel({ debugMode, onDebugModeChange, onClearLastCompleted }) {
             </label>
           </div>
 
-          {debugMode.useFakeTime && (
-            <div className="debug-section">
-              <label>
-                <span className="debug-label">Set Fake Date & Time:</span>
+          <div className="debug-section">
+            <label>
+              <span className="debug-label">Set Fake Date & Time:</span>
+              <div className="datetime-input-group">
                 <input
                   type="datetime-local"
-                  value={formatDateTimeLocal(debugMode.fakeTime)}
+                  value={formatDateTimeLocal(pendingFakeTime)}
                   onChange={handleTimeChange}
                   className="debug-datetime-input"
                 />
-              </label>
-            </div>
-          )}
+                <button
+                  type="button"
+                  className="reset-time-btn"
+                  onClick={resetToCurrentTime}
+                  title="Reset to current time"
+                >
+                  ↻
+                </button>
+                <button
+                  type="button"
+                  className="apply-time-btn"
+                  onClick={applyFakeTime}
+                  title="Apply fake time"
+                >
+                  ✓
+                </button>
+              </div>
+            </label>
+          </div>
 
           <div className="debug-section">
             <div className="debug-info">
