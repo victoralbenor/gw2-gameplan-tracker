@@ -19,28 +19,28 @@ const getInitialCategories = () => {
   
   return {
     coffeeWeeklies: {
-      title: 'Coffee Run Weeklies',
+      title: '📅 Quick Weeklies',
       description: 'Resets Mondays at 04:30 UTC-3',
       resetType: 'weekly',
       tasks: [],
       lastResetTime: null
     },
     coffeeDailies: {
-      title: 'Coffee Run Dailies',
+      title: '⚡ Quick Dailies',
       description: 'Resets daily at 21:00 UTC-3',
       resetType: 'daily',
       tasks: [],
       lastResetTime: null
     },
     gamingDailies: {
-      title: 'Gaming Session Dailies',
+      title: '🎮 Gaming Dailies',
       description: 'Resets daily at 21:00 UTC-3',
       resetType: 'daily',
       tasks: [],
       lastResetTime: null
     },
     workingGoals: {
-      title: 'Working Goals',
+      title: '🎯 Working Goals',
       description: 'No reset - permanent progress',
       resetType: 'none',
       tasks: [],
